@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const request = require('request').defaults({ encoding: null });
 const SGDB = require('steamgriddb');
 
-const steamGridAPI = { Authorization: 'Bearer 97bc448ba70279c1e63fb71341467e50' };
+const steamGridAPI = { Authorization: 'Bearer XXXXXXXXXXXXXXXXX' };
 
 var gridDir;
 var STEAMAPIKEY;
@@ -47,7 +47,7 @@ function writeCovers() {
               console.log(grids);
               if (grids.length === 0 || coverMode === 'animated') {
                 request(
-                  'https://github.com/T1lt3d/Steam-Grid-Finder/raw/master/cover-images/animated/' +
+                  'https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/' +
                     app.appid +
                     'p.png',
                   (err, res, image) => {
