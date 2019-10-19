@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script src="src/write-all-covers.js"></script>
+    <script src="src/create-placeholder-cover.js"></script>
+    <script>
+      function logProgress(text) {
+        var ul = document.getElementById("log-list");
+        var li = document.createElement("li");
+        li.appendChild(document.createTextNode(text));
+        ul.appendChild(li);
+        var items = document.querySelectorAll('#log-list li');
+        if(items.length>6) items[0].parentNode.removeChild(items[0]);
+      }
+      function logProgressError(text) {
+        var ul = document.getElementById("log-list");
+        var li = document.createElement("li");
+        li.appendChild(document.createTextNode(text));
+        li.setAttribute("style", "color: red")
+        ul.appendChild(li);
+        var items = document.querySelectorAll('#log-list li');
+        if(items.length>6) items[0].parentNode.removeChild(items[0]);
+      }
+      var coverFont = 'assets/cover-font.otf'
+    </script>
+    <link type="text/css" rel="stylesheet" href="main.css"></link>
+    <title>Steam Cover Art Setter</title>
+  </head>
+  <body>
+    <h1>Set cover art for the new Steam library.</h1>
+    <h2>App made by T1lt3d</h2>
+    <h6>In order for the app to create its own game cover when it can't find one, make sure to download and install GM from <a>http://www.graphicsmagick.org/</a></h6>
+
+    <p>You can get your Steam API key <a>steamcommunity.com/dev/apikey</a></p>    
+    <input placeholder="Enter your Steam API Key" id="steam-APIKEY" />
+    <p>You can get your SteamID64 and SteamID3 from <a>steamid.io</a></p>
+    <input placeholder="Enter your Steam ID64" id="steam-ID" />
+    <p>Your userdata folder is usually under C:\Program Files (x86)\Steam\userdata\[Your SteamID3]</p>
+    <input placeholder="Enter path to your Steam userdata folder" id="grid-dir" />
+    <div id="progress-log">
+      <ul id="log-list">
+      </ul>
+    </div>
+    <select id="cover-mode">
+      <option value="white-logo">Prefer Uniform Design</option>
+      <option value="animated">Prefer Animated Covers (May be inconsistent)</option>
+    </select>
+    <button id="start-button" onclick="writeCovers()">START</button>
+    <script>logProgress("Hit start when ready!")</script>
+  </body>
+</html>
