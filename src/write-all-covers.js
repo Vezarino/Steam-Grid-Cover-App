@@ -124,8 +124,9 @@ function writeCovers() {
 function setInputs() {
   console.log(gridDir);
   var gridDirInput = (
-    document.getElementById('grid-dir').value.replace(/\\/g, '\\') + '\\config\\grid\\'
+    document.getElementById('grid-dir').value.replace(/\\/g, '\\')
   ).trim();
+  gridDirInput = path.join(gridDirInput, 'config', 'grid', '/');
   var STEAMIDInput = document.getElementById('steam-ID').value.trim();
   var STEAMAPIInput = document.getElementById('steam-APIKEY').value.trim();
   var error = false;
