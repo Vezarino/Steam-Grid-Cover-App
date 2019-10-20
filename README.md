@@ -5,5 +5,5 @@ Before running the app, install GraphicsMagick if you want the app to create its
 HTTP://WWW.GRAPHICSMAGICK.ORG/
 
 Download the App here:
-http://www.mediafire.com/file/8172wbfmb9hum4s/SteamCoverFinder_Setup_1.0.0.exe/file
+www.mediafire.com/file/h6v8ahw3q3liso9/SteamCoverFinder_Setup_1.0.0.exe/file
 Run the Setup file. It may get firewalled but please allow it to run. It won't do anything to your PC. Promise :)
