@@ -145,8 +145,20 @@ function setInputs() {
     error = true;
   }
   if (!fs.existsSync(gridDir)) {
-    logProgressError('That userdata directory does not exist. Make sure the path is correct.');
-    error = true;
+    // Check if user directory exists, but doesn't contain the 'grid' directory
+    var parent = gridDir.slice(0, -5)
+    if (fs.existsSync(parent)) {
+      try {
+        fs.mkdirSync(gridDir)
+        logProgress('Specified userdata directory missing grid subdirectory - created.')
+      } catch (e) {
+        logProgressError('Specified userdata directory missing grid subdirectory - failed to create.')
+        error = true
+      }
+    } else {
+      logProgressError('That userdata directory does not exist. Make sure the path is correct.');
+      error = true;
+    }
   }
   coverMode =
     document.getElementById('cover-mode').value === 'animated' ? 'animated' : 'white-logo';
