@@ -43,70 +43,18 @@ function writeCovers() {
           )
             .then(grids => grids.json())
             .then(grids => grids.data)
-            .then(grids => {
+            .then(async grids => {
               console.log(grids);
               if (grids.length === 0 || coverMode === 'animated') {
-                request(
-                  'https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/' +
-                    app.appid +
-                    'p.png',
-                  (err, res, image) => {
-                    if (!(res.statusCode === 404)) {
-                      fs.writeFileSync(gridDir + app.appid + 'p.png', image);
-                      logProgress(
-                        'Found Cover ' +
-                          app.name +
-                          ' Credit to r/steamgrid community and u/Deytron for compilation'
-                      );
-                    } else {
-                      request(
-                        'https://github.com/T1lt3d/Steam-Grid-Cover-Finder/raw/master/cover-images/kennett-ny/' +
-                          app.appid +
-                          'p.png',
-                        (err, res, image) => {
-                          if (!(res.statusCode === 404)) {
-                            fs.writeFileSync(gridDir + app.appid + 'p.png', image);
-                            logProgress(
-                              'Found Cover ' +
-                                app.name +
-                                ' Credit to r/steamgrid community and u/kennett-ny'
-                            );
-                          } else {
-                            request(
-                              'https://raw.githubusercontent.com/babgozd/camporter96-custom/master/grid/' +
-                                app.appid +
-                                'p.png',
-                              (err, res, image) => {
-                                if (!(res.statusCode === 404)) {
-                                  logProgress(
-                                    'Found Cover ' + app.name + '. Credit to u/camporter'
-                                  );
-                                  fs.writeFileSync(gridDir + app.appid + 'p.png', image);
-                                } else {
-                                  createPlaceholderCover(app);
-                                }
-                              }
-                            );
-                          }
-                        }
-                      );
+                if (!await getSteamGridAnimatedCover(app.name, app.appid)) {
+                  if (!await getCoverFromKennettNyGitHub(app.name, app.appid)) {
+                    if (!await getCoverFromCamporterGitHub(app.name, app.appid)) {
+                      createPlaceholderCover(app);
                     }
                   }
-                );
-              } else {
-                request(grids[0].url, (err, res, image) => {
-                  if (!(res.statusCode === 404)) {
-                    fs.writeFileSync(gridDir + app.appid + 'p.png', image);
-                    logProgress(
-                      'Found Cover ' +
-                        app.name +
-                        ' from steamgriddb. Credit to ' +
-                        grids[0].author.name
-                    );
-                  } else {
-                    logProgressError('Error downloading cover from steamgriddb ' + app.name);
-                  }
-                });
+                }
+              } else if (!await getSteamGridStaticCover(app.name, app.appid, grids[0].url, grids[0].author.name)){
+                logProgressError('Error downloading cover from steamgriddb ' + app.name);
               }
             });
         }, pause);
@@ -182,4 +130,75 @@ function downloadFont() {
     }
   );
   return error;
+}
+
+/**
+ * @param {string} name
+ * @param {string} appid 
+ * @return {Promise<Boolean>}
+ */
+function getSteamGridAnimatedCover(name, appid) {
+  return new Promise(resolve => {
+    request(`https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/${appid}p.png`, (err, res, image) => {
+      if (!(res.statusCode === 404)) {
+        fs.writeFileSync(gridDir + appid + 'p.png', image);
+        logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/Deytron for compilation`);
+        resolve(true)
+      } else resolve(false);
+    })
+  })
+}
+
+/**
+ * @param {string} name
+ * @param {string} appid 
+ * @param {string} url
+ * @param {string} author
+ * @return {Promise<Boolean>}
+ */
+function getSteamGridStaticCover(name, appid, url, author) {
+  return new Promise(resolve => {
+    request(url, (err, res, image) => {
+      if (!(res.statusCode === 404)) {
+        fs.writeFileSync(gridDir + appid + 'p.png', image);
+        logProgress(`Found Cover ${name}  from steamgriddb. Credit to ${author}`);
+        resolve(true)
+      } else resolve(false);
+    })
+  })
+}
+
+
+/**
+ * @param {string} name
+ * @param {string} appid 
+ * @return {Promise<Boolean>}
+ */
+function getCoverFromKennettNyGitHub(name, appid) {
+  return new Promise(resolve => {
+    request(`https://github.com/T1lt3d/Steam-Grid-Cover-Finder/raw/master/cover-images/kennett-ny/${appid}p.png`, (err, res, image) => {
+      if (!(res.statusCode === 404)) {
+        fs.writeFileSync(gridDir + appid + 'p.png', image);
+        logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/kennett-ny`);
+        resolve(true)
+      } else resolve(false);
+    })
+  })
+}
+
+/**
+ * @param {string} name
+ * @param {string} appid 
+ * @return {Promise<Boolean>}
+ */
+function getCoverFromCamporterGitHub(name, appid) {
+  return new Promise(resolve => {
+    request(`https://raw.githubusercontent.com/babgozd/camporter96-custom/master/grid/${appid}p.png`, (err, res, image) => {
+      if (!(res.statusCode === 404)) {
+        fs.writeFileSync(gridDir + appid + 'p.png', image);
+        logProgress(`Found Cover ${name}. Credit to u/camporter`);
+        resolve(true)
+      } else resolve(false);
+    })
+  })
 }
