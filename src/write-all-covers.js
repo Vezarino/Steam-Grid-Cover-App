@@ -157,7 +157,7 @@ function setInputs() {
 function downloadFont() {
   var error = false;
   request(
-    'https://github.com/T1lt3d/Steam-Grid-Cover-Finder/blob/master/assets/cover-font.ttf?raw=true',
+    'https://github.com/T1lt3d/Steam-Grid-Cover-App/blob/master/assets/cover-font.ttf?raw=true',
     (err, res, font) => {
       if (err) {
         logProgressError('Failed to download font for covers');
