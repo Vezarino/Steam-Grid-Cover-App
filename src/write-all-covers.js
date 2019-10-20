@@ -30,12 +30,11 @@ function writeCovers() {
       '&include_appinfo=true&include_played_free_games=true'
   )
     .then(response => response.json())
-    .then(data => {
+    .then(async data => {
       logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
-      var pause = 0;
-      data.response.games.forEach(app => {
-        setTimeout(() => {
-          fetch(
+      for (const app of data.response.games) {
+        sleep(delay)
+        await fetch(
             'https://www.steamgriddb.com/api/v2/grids/steam/' +
               app.appid +
               '?styles=white_logo&dimensions=600x900,342x482',
@@ -67,9 +66,9 @@ function writeCovers() {
                 logProgressError('Error downloading cover from steamgriddb ' + app.name);
               }
             });
-        }, pause);
-        pause += delay;
-      });
+      }
+      logProgress('Finished processing')
+      document.getElementById('start-button').disabled = false;
     })
     .catch(err => {
       logProgressError('Error accessing the Steam API');
@@ -225,4 +224,12 @@ function getCoverFromCamporterGitHub(name, appid) {
       }
     );
   });
+}
+
+/**
+ * @param {number} time
+ * @return {Promise<void>} 
+ */
+function sleep(time) {
+  return new Promise(resolve => setTimeout(resolve, time))
 }
