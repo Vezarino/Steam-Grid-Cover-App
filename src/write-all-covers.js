@@ -45,21 +45,29 @@ function writeCovers() {
             .then(grids => grids.data)
             .then(async grids => {
               console.log(grids);
-              if (grids.length === 0 || coverMode === 'animated') {
-                if (!await getSteamGridAnimatedCover(app.name, app.appid)) {
-                  if (!await getCoverFromKennettNyGitHub(app.name, app.appid)) {
-                    if (!await getCoverFromCamporterGitHub(app.name, app.appid)) {
+              if (grids.length === 0 || coverMode === 'animated' || grids === undefined) {
+                if (!(await getSteamGridAnimatedCover(app.name, app.appid))) {
+                  if (!(await getCoverFromKennettNyGitHub(app.name, app.appid))) {
+                    if (!(await getCoverFromCamporterGitHub(app.name, app.appid))) {
                       createPlaceholderCover(app);
                     }
                   }
                 }
-              } else if (!await getSteamGridStaticCover(app.name, app.appid, grids[0].url, grids[0].author.name)){
+              } else if (
+                !(await getSteamGridStaticCover(
+                  app.name,
+                  app.appid,
+                  grids[0].url,
+                  grids[0].author.name
+                ))
+              ) {
                 logProgressError('Error downloading cover from steamgriddb ' + app.name);
               }
             });
         }, pause);
         pause += delay;
       });
+      logProgress('Done!');
     })
     .catch(err => {
       logProgressError('Error accessing the Steam API');
@@ -71,9 +79,10 @@ function writeCovers() {
 
 function setInputs() {
   console.log(gridDir);
-  var gridDirInput = (
-    document.getElementById('grid-dir').value.replace(/\\/g, '\\')
-  ).trim();
+  var gridDirInput = document
+    .getElementById('grid-dir')
+    .value.replace(/\\/g, '\\')
+    .trim();
   gridDirInput = path.join(gridDirInput, 'config', 'grid', '/');
   var STEAMIDInput = document.getElementById('steam-ID').value.trim();
   var STEAMAPIInput = document.getElementById('steam-APIKEY').value.trim();
@@ -95,14 +104,16 @@ function setInputs() {
   }
   if (!fs.existsSync(gridDir)) {
     // Check if user directory exists, but doesn't contain the 'grid' directory
-    var parent = gridDir.slice(0, -5)
+    var parent = gridDir.slice(0, -5);
     if (fs.existsSync(parent)) {
       try {
-        fs.mkdirSync(gridDir)
-        logProgress('Specified userdata directory missing grid subdirectory - created.')
+        fs.mkdirSync(gridDir);
+        logProgress('Specified userdata directory missing grid subdirectory - created.');
       } catch (e) {
-        logProgressError('Specified userdata directory missing grid subdirectory - failed to create.')
-        error = true
+        logProgressError(
+          'Specified userdata directory missing grid subdirectory - failed to create.'
+        );
+        error = true;
       }
     } else {
       logProgressError('That userdata directory does not exist. Make sure the path is correct.');
@@ -134,24 +145,29 @@ function downloadFont() {
 
 /**
  * @param {string} name
- * @param {string} appid 
+ * @param {string} appid
  * @return {Promise<Boolean>}
  */
 function getSteamGridAnimatedCover(name, appid) {
   return new Promise(resolve => {
-    request(`https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/${appid}p.png`, (err, res, image) => {
-      if (!(res.statusCode === 404)) {
-        fs.writeFileSync(gridDir + appid + 'p.png', image);
-        logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/Deytron for compilation`);
-        resolve(true)
-      } else resolve(false);
-    })
-  })
+    request(
+      `https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/${appid}p.png`,
+      (err, res, image) => {
+        if (!(res.statusCode === 404)) {
+          fs.writeFileSync(gridDir + appid + 'p.png', image);
+          logProgress(
+            `Found Cover ${name} Credit to r/steamgrid community and u/Deytron for compilation`
+          );
+          resolve(true);
+        } else resolve(false);
+      }
+    );
+  });
 }
 
 /**
  * @param {string} name
- * @param {string} appid 
+ * @param {string} appid
  * @param {string} url
  * @param {string} author
  * @return {Promise<Boolean>}
@@ -162,43 +178,48 @@ function getSteamGridStaticCover(name, appid, url, author) {
       if (!(res.statusCode === 404)) {
         fs.writeFileSync(gridDir + appid + 'p.png', image);
         logProgress(`Found Cover ${name}  from steamgriddb. Credit to ${author}`);
-        resolve(true)
+        resolve(true);
       } else resolve(false);
-    })
-  })
+    });
+  });
 }
-
 
 /**
  * @param {string} name
- * @param {string} appid 
+ * @param {string} appid
  * @return {Promise<Boolean>}
  */
 function getCoverFromKennettNyGitHub(name, appid) {
   return new Promise(resolve => {
-    request(`https://github.com/T1lt3d/Steam-Grid-Cover-Finder/raw/master/cover-images/kennett-ny/${appid}p.png`, (err, res, image) => {
-      if (!(res.statusCode === 404)) {
-        fs.writeFileSync(gridDir + appid + 'p.png', image);
-        logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/kennett-ny`);
-        resolve(true)
-      } else resolve(false);
-    })
-  })
+    request(
+      `https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/kennett-ny/${appid}p.png`,
+      (err, res, image) => {
+        if (!(res.statusCode === 404)) {
+          fs.writeFileSync(gridDir + appid + 'p.png', image);
+          logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/kennett-ny`);
+          resolve(true);
+        } else resolve(false);
+      }
+    );
+  });
 }
 
 /**
  * @param {string} name
- * @param {string} appid 
+ * @param {string} appid
  * @return {Promise<Boolean>}
  */
 function getCoverFromCamporterGitHub(name, appid) {
   return new Promise(resolve => {
-    request(`https://raw.githubusercontent.com/babgozd/camporter96-custom/master/grid/${appid}p.png`, (err, res, image) => {
-      if (!(res.statusCode === 404)) {
-        fs.writeFileSync(gridDir + appid + 'p.png', image);
-        logProgress(`Found Cover ${name}. Credit to u/camporter`);
-        resolve(true)
-      } else resolve(false);
-    })
-  })
+    request(
+      `https://raw.githubusercontent.com/babgozd/camporter96-custom/master/grid/${appid}p.png`,
+      (err, res, image) => {
+        if (!(res.statusCode === 404)) {
+          fs.writeFileSync(gridDir + appid + 'p.png', image);
+          logProgress(`Found Cover ${name}. Credit to u/camporter`);
+          resolve(true);
+        } else resolve(false);
+      }
+    );
+  });
 }
