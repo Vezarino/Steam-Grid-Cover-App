@@ -4,12 +4,13 @@ const fetch = require('node-fetch');
 const request = require('request').defaults({ encoding: null });
 const SGDB = require('steamgriddb');
 
-const steamGridAPI = { Authorization: 'Bearer 97bc448ba70279c1e63fb71341467e50' };
+const steamGridAPI = { Authorization: 'Bearer XXXXXXXXXXXXX' };
 
 var gridDir;
 var STEAMAPIKEY;
 var STEAMID;
 var coverMode;
+var delay = 500;
 
 fetch(
   'https://www.steamgriddb.com/api/v2/grids/steam/400?styles=white_logo&dimensions=600x900&342x482',
@@ -31,7 +32,6 @@ function writeCovers() {
     .then(response => response.json())
     .then(data => {
       logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
-      const delay = 500;
       var pause = 0;
       data.response.games.forEach(app => {
         setTimeout(() => {
@@ -124,6 +124,7 @@ function setInputs() {
   }
   coverMode =
     document.getElementById('cover-mode').value === 'animated' ? 'animated' : 'white-logo';
+  delay = parseInt(document.getElementById('delay').value);
   if (!error) document.getElementById('start-button').disabled = true;
   return error;
 }

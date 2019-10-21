@@ -5,8 +5,8 @@ let win;
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
-    width: 400,
-    height: 800,
+    width: 500,
+    height: 900,
     resizable: false,
     webPreferences: {
       nodeIntegration: true
