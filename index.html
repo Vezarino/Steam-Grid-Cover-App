@@ -11,7 +11,8 @@
         li.appendChild(document.createTextNode(text));
         ul.appendChild(li);
         var items = document.querySelectorAll('#log-list li');
-        if(items.length>6) items[0].parentNode.removeChild(items[0]);
+        //if(items.length>6) items[0].parentNode.removeChild(items[0]);
+        li.scrollIntoView()
       }
       function logProgressError(text) {
         var ul = document.getElementById("log-list");
@@ -20,7 +21,8 @@
         li.setAttribute("style", "color: red")
         ul.appendChild(li);
         var items = document.querySelectorAll('#log-list li');
-        if(items.length>6) items[0].parentNode.removeChild(items[0]);
+        //if(items.length>6) items[0].parentNode.removeChild(items[0]);
+        li.scrollIntoView()
       }
       var coverFont = 'assets/cover-font.otf'
     </script>

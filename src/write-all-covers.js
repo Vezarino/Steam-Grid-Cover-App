@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const request = require('request').defaults({ encoding: null });
 const SGDB = require('steamgriddb');
 
-const steamGridAPI = { Authorization: 'Bearer XXXXXXXXXXXXXXXXX' };
+const steamGridAPI = { Authorization: 'Bearer XXXXX' };
 
 var gridDir;
 var STEAMAPIKEY;
@@ -30,7 +30,7 @@ function writeCovers() {
   )
     .then(response => response.json())
     .then(data => {
-      console.info('Found ', data.response.games.length, ' Games on this Steam Account.');
+      logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
       const delay = 500;
       var pause = 0;
       data.response.games.forEach(app => {
@@ -44,7 +44,6 @@ function writeCovers() {
             .then(grids => grids.json())
             .then(grids => grids.data)
             .then(async grids => {
-              console.log(grids);
               if (grids.length === 0 || coverMode === 'animated' || grids === undefined) {
                 if (!(await getSteamGridAnimatedCover(app.name, app.appid))) {
                   if (!(await getCoverFromKennettNyGitHub(app.name, app.appid))) {
@@ -67,7 +66,6 @@ function writeCovers() {
         }, pause);
         pause += delay;
       });
-      logProgress('Done!');
     })
     .catch(err => {
       logProgressError('Error accessing the Steam API');
