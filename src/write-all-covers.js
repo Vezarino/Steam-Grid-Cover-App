@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const request = require('request').defaults({ encoding: null });
 const SGDB = require('steamgriddb');
 
-const steamGridAPI = { Authorization: 'Bearer XXXXX' };
+const steamGridAPI = { Authorization: 'Bearer 97bc448ba70279c1e63fb71341467e50' };
 
 var gridDir;
 var STEAMAPIKEY;
@@ -44,7 +44,11 @@ function writeCovers() {
             .then(grids => grids.json())
             .then(grids => grids.data)
             .then(async grids => {
-              if (grids.length === 0 || coverMode === 'animated' || grids === undefined) {
+              if (grids === undefined) {
+                logProgressError(
+                  "It appears that Steamgriddb API is down, so cover can't be fetched. Try running the app again later"
+                );
+              } else if (grids.length === 0 || coverMode === 'animated') {
                 if (!(await getSteamGridAnimatedCover(app.name, app.appid))) {
                   if (!(await getCoverFromKennettNyGitHub(app.name, app.appid))) {
                     if (!(await getCoverFromCamporterGitHub(app.name, app.appid))) {
