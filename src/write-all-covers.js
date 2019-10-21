@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 const request = require('request').defaults({ encoding: null });
 const SGDB = require('steamgriddb');
 
-const steamGridAPI = { Authorization: 'Bearer 97bc448ba70279c1e63fb71341467e50' };
+const steamGridAPI = { Authorization: 'Bearer XXXXXXXXXXXXXXXXXXXX' };
 
 var gridDir;
 var STEAMAPIKEY;
