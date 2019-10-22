@@ -24,6 +24,11 @@
   overflow: hidden;
 }
 
+#progress-bar{
+	width: 90%;
+	margin-bottom: 2px;
+}
+
 
 
 
