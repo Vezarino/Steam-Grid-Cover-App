@@ -1,3 +1,4 @@
+Note: The original repository this was forked off has been deleted. I am merely keeping this here for posterity. Original README follows.
 # Steam Grid Cover Finder
 This electron app finds game covers for all your games in the new Steam library. It searches multiple sources, and creates its own cover using gm if it can't find one. 
 
