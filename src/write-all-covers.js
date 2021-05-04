@@ -11,6 +11,8 @@ var STEAMAPIKEY;
 var STEAMID;
 var coverMode;
 var delay = 500;
+/**@type {HTMLMeterElement} */
+var progress;
 
 fetch(
   'https://www.steamgriddb.com/api/v2/grids/steam/400?styles=white_logo&dimensions=600x900&342x482',
@@ -30,15 +32,16 @@ function writeCovers() {
       '&include_appinfo=true&include_played_free_games=true'
   )
     .then(response => response.json())
-    .then(data => {
+    .then(async data => {
       logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
-      var pause = 0;
-      data.response.games.forEach(app => {
-        setTimeout(() => {
-          fetch(
+      progress.max = data.response.games.length;
+      for (const app of data.response.games.slice(0, 10)) {
+        try {
+          sleep(delay)
+          await fetch(
             'https://www.steamgriddb.com/api/v2/grids/steam/' +
-              app.appid +
-              '?styles=white_logo&dimensions=600x900,342x482',
+            app.appid +
+            '?styles=white_logo&dimensions=600x900,342x482',
             { headers: steamGridAPI }
           )
             .then(grids => grids.json())
@@ -67,9 +70,12 @@ function writeCovers() {
                 logProgressError('Error downloading cover from steamgriddb ' + app.name);
               }
             });
-        }, pause);
-        pause += delay;
-      });
+        } finally {
+          ++progress.value
+        }
+      }
+      logProgress('Finished processing')
+      document.getElementById('start-button').disabled = false;
     })
     .catch(err => {
       logProgressError('Error accessing the Steam API');
@@ -125,6 +131,7 @@ function setInputs() {
   coverMode =
     document.getElementById('cover-mode').value === 'animated' ? 'animated' : 'white-logo';
   delay = parseInt(document.getElementById('delay').value);
+  progress = /**@type {HTMLMeterElement} */(document.getElementById('progress-bar'));
   if (!error) document.getElementById('start-button').disabled = true;
   return error;
 }
@@ -225,4 +232,12 @@ function getCoverFromCamporterGitHub(name, appid) {
       }
     );
   });
+}
+
+/**
+ * @param {number} time
+ * @return {Promise<void>} 
+ */
+function sleep(time) {
+  return new Promise(resolve => setTimeout(resolve, time))
 }

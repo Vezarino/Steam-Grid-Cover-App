@@ -41,10 +41,6 @@
     <input placeholder="Enter your Steam ID64" id="steam-ID" />
     <p>Your userdata folder is usually under C:\Program Files (x86)\Steam\userdata\[Your SteamID3]</p>
     <input placeholder="Enter path to your Steam userdata folder" id="grid-dir" />
-    <div id="progress-log" style="overflow-y: auto;">
-      <ul id="log-list">
-      </ul>
-    </div>
     <select id="cover-mode">
       <option value="white-logo">Prefer Uniform Design</option>
       <option value="animated">Prefer Animated Covers (May be inconsistent)</option>
@@ -58,6 +54,13 @@
       <option value="3000">1 Per 3 Seconds</option>
     </select>
     <button id="start-button" onclick="writeCovers()">START</button>
-    <script>afterRender()</script>
+    <script>logProgress("Hit start when ready!")</script>
+    <div>
+        <meter id="progress-bar"></meter>
+    </div>
+    <div id="progress-log" style="overflow-y: auto;">
+      <ul id="log-list">
+      </ul>
+    </div>
   </body>
 </html>
