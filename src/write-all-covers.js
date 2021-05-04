@@ -37,7 +37,7 @@ function writeCovers() {
       progress.max = data.response.games.length;
       for (const app of data.response.games.slice(0, 10)) {
         try {
-          sleep(delay)
+          await sleep(delay);
           await fetch(
             'https://www.steamgriddb.com/api/v2/grids/steam/' +
             app.appid +
