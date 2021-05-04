@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <script src="src/write-all-covers.js"></script>
     <script src="src/create-placeholder-cover.js"></script>
+    <script src="src/lifecycle.js"></script>
     <script>
       function logProgress(text) {
         var ul = document.getElementById("log-list");
@@ -57,6 +58,6 @@
       <option value="3000">1 Per 3 Seconds</option>
     </select>
     <button id="start-button" onclick="writeCovers()">START</button>
-    <script>logProgress("Hit start when ready!")</script>
+    <script>afterRender()</script>
   </body>
 </html>
