@@ -17,9 +17,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^18.3.7",
-    "electron-builder": "^21.2.0",
-    "electron-packager": "^15.2.0",
+    "electron": "^23.1.4",
+    "electron-builder": "^23.6.0",
+    "electron-packager": "^17.1.1",
     "gm": "^1.23.1",
     "node-gyp": "^5.1.1"
   },
