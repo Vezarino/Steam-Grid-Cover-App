@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 
-let win;
+let win: BrowserWindow | null;
 
 function createWindow() {
   // Create the browser window.
@@ -9,15 +9,16 @@ function createWindow() {
     height: 900,
     resizable: false,
     webPreferences: {
-      nodeIntegration: true
-    }
+      nodeIntegration: true,
+      contextIsolation: false
+    },
   });
 
   win.loadFile('index.html');
   win.setMenu(null);
 
   // Open the DevTools.
-  //win.webContents.openDevTools();
+  win.webContents.openDevTools();
 
   win.on('closed', () => {
     win = null;

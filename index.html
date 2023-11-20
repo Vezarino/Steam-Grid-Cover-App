@@ -2,9 +2,10 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <script src="src/write-all-covers.js"></script>
-    <script src="src/create-placeholder-cover.js"></script>
-    <script src="src/lifecycle.js"></script>
+    <script>exports = {} /** Why do we need an export object when targetting module: none? */</script>
+    <script src="dist/js/write-all-covers.js"></script>
+    <script src="dist/js/create-placeholder-cover.js"></script>
+    <script src="dist/js/lifecycle.js"></script>
     <script>
       function logProgress(text) {
         var ul = document.getElementById("log-list");
@@ -54,7 +55,6 @@
       <option value="3000">1 Per 3 Seconds</option>
     </select>
     <button id="start-button" onclick="writeCovers()">START</button>
-    <script>logProgress("Hit start when ready!")</script>
     <div>
         <meter id="progress-bar"></meter>
     </div>
@@ -62,5 +62,6 @@
       <ul id="log-list">
       </ul>
     </div>
+    <script>afterRender()</script>
   </body>
 </html>

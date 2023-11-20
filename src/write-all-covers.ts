@@ -1,36 +1,23 @@
-const fs = require('fs');
-const path = require('path');
-const fetch = require('node-fetch');
-const request = require('request').defaults({ encoding: null });
-const SGDB = require('steamgriddb');
+import * as fs from 'fs';
+import * as path from 'path';
+import * as _request from 'request';
 
-const steamGridAPI = { Authorization: `Bearer ${ process.env.GRIDAPI || "XXXXXXXXXXXXXXXXXXXX"}` };
+const request = _request.defaults({ encoding: null });
+const steamGridAPI = { Authorization: `Bearer ${process.env.GRIDAPI || ''}` };
 
-var gridDir;
-var STEAMAPIKEY;
-var STEAMID;
-var coverMode;
-var delay = 500;
-/**@type {HTMLMeterElement} */
-var progress;
+let gridDir: string;
+let STEAMAPIKEY: string;
+let STEAMID: string;
+let coverMode: string;
+let delay = 500;
+let progress: HTMLMeterElement;
 
-fetch(
-  'https://www.steamgriddb.com/api/v2/grids/steam/400?styles=white_logo&dimensions=600x900&342x482',
-  {
-    headers: steamGridAPI
-  }
-).then(res => console.log(res.json()));
+fetch('https://www.steamgriddb.com/api/v2/grids/steam/400?styles=white_logo&dimensions=600x900&342x482', { headers: steamGridAPI }).then(res => console.log(res.json()));
 
 function writeCovers() {
   if (downloadFont()) return;
   if (setInputs()) return;
-  fetch(
-    'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=' +
-      STEAMAPIKEY +
-      '&steamid=' +
-      STEAMID +
-      '&include_appinfo=true&include_played_free_games=true'
-  )
+  fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAMAPIKEY}'&steamid=${STEAMID}'&include_appinfo=true&include_played_free_games=true`)
     .then(response => response.json())
     .then(async data => {
       logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
@@ -38,35 +25,17 @@ function writeCovers() {
       for (const app of data.response.games.slice(0, 10)) {
         try {
           await sleep(delay);
-          await fetch(
-            'https://www.steamgriddb.com/api/v2/grids/steam/' +
-            app.appid +
-            '?styles=white_logo&dimensions=600x900,342x482',
-            { headers: steamGridAPI }
-          )
+          await fetch(`https://www.steamgriddb.com/api/v2/grids/steam/${app.appid}?styles=white_logo&dimensions=600x900,342x482`, { headers: steamGridAPI })
             .then(grids => grids.json())
             .then(grids => grids.data)
             .then(async grids => {
-              if (grids === undefined) {
-                logProgressError(
-                  "It appears that Steamgriddb API is down, so cover can't be fetched. Try running the app again later"
-                );
-              } else if (grids.length === 0 || coverMode === 'animated') {
-                if (!(await getSteamGridAnimatedCover(app.name, app.appid))) {
-                  if (!(await getCoverFromKennettNyGitHub(app.name, app.appid))) {
-                    if (!(await getCoverFromCamporterGitHub(app.name, app.appid))) {
-                      createPlaceholderCover(app);
-                    }
-                  }
-                }
-              } else if (
-                !(await getSteamGridStaticCover(
-                  app.name,
-                  app.appid,
-                  grids[0].url,
-                  grids[0].author.name
-                ))
-              ) {
+              if (grids === undefined) logProgressError("It appears that Steamgriddb API is down, so cover can't be fetched. Try running the app again later");
+              else if (grids.length === 0 || coverMode === 'animated') {
+                await getSteamGridAnimatedCover(app.name, app.appid)
+                  || await getCoverFromKennettNyGitHub(app.name, app.appid)
+                  || await getCoverFromCamporterGitHub(app.name, app.appid)
+                  || createPlaceholderCover(app, gridDir);
+              } else if (!(await getSteamGridStaticCover(app.name, app.appid, grids[0].url, grids[0].author.name))) {
                 logProgressError('Error downloading cover from steamgriddb ' + app.name);
               }
             });
@@ -74,27 +43,23 @@ function writeCovers() {
           ++progress.value
         }
       }
-      logProgress('Finished processing')
-      document.getElementById('start-button').disabled = false;
+      logProgress('Finished processing');
+      (document.getElementById('start-button') as HTMLButtonElement).disabled = false;
     })
     .catch(err => {
       logProgressError('Error accessing the Steam API');
       logProgressError('Make sure the API Key and SteamID64 are correct!');
       logProgressError('HTTP Error: ' + err);
-      document.getElementById('start-button').disabled = false;
+      (document.getElementById('start-button') as HTMLButtonElement).disabled = false;
     });
 }
 
 function setInputs() {
   console.log(gridDir);
-  var gridDirInput = document
-    .getElementById('grid-dir')
-    .value.replace(/\\/g, '\\')
-    .trim();
-  gridDirInput = path.join(gridDirInput, 'config', 'grid', '/');
-  var STEAMIDInput = document.getElementById('steam-ID').value.trim();
-  var STEAMAPIInput = document.getElementById('steam-APIKEY').value.trim();
-  var error = false;
+  const gridDirInput = path.join((document.getElementById('grid-dir') as HTMLInputElement).value.replace(/\\/g, '\\'), 'config', 'grid', '/');
+  const STEAMIDInput = (document.getElementById('steam-ID') as HTMLInputElement).value.trim();
+  const STEAMAPIInput = (document.getElementById('steam-APIKEY') as HTMLInputElement).value.trim();
+  let error = false;
   if (gridDirInput != '') gridDir = gridDirInput;
   else {
     logProgressError('No input for userdata folder path');
@@ -128,11 +93,10 @@ function setInputs() {
       error = true;
     }
   }
-  coverMode =
-    document.getElementById('cover-mode').value === 'animated' ? 'animated' : 'white-logo';
-  delay = parseInt(document.getElementById('delay').value);
-  progress = /**@type {HTMLMeterElement} */(document.getElementById('progress-bar'));
-  if (!error) document.getElementById('start-button').disabled = true;
+  coverMode = (document.getElementById('cover-mode') as HTMLInputElement).value === 'animated' ? 'animated' : 'white-logo';
+  delay = (document.getElementById('delay') as HTMLInputElement).valueAsNumber;
+  progress = document.getElementById('progress-bar') as HTMLMeterElement;
+  if (!error) (document.getElementById('start-button') as HTMLButtonElement).disabled = true;
   return error;
 }
 
@@ -153,21 +117,14 @@ function downloadFont() {
   return error;
 }
 
-/**
- * @param {string} name
- * @param {string} appid
- * @return {Promise<Boolean>}
- */
-function getSteamGridAnimatedCover(name, appid) {
-  return new Promise(resolve => {
+function getSteamGridAnimatedCover(name: string, appid: string) {
+  return new Promise<boolean>(resolve => {
     request(
       `https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/${appid}p.png`,
       (err, res, image) => {
         if (!(res.statusCode === 404)) {
           fs.writeFileSync(gridDir + appid + 'p.png', image);
-          logProgress(
-            `Found Cover ${name} Credit to r/steamgrid community and u/Deytron for compilation`
-          );
+          logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/Deytron for compilation`);
           resolve(true);
         } else resolve(false);
       }
@@ -175,15 +132,8 @@ function getSteamGridAnimatedCover(name, appid) {
   });
 }
 
-/**
- * @param {string} name
- * @param {string} appid
- * @param {string} url
- * @param {string} author
- * @return {Promise<Boolean>}
- */
-function getSteamGridStaticCover(name, appid, url, author) {
-  return new Promise(resolve => {
+function getSteamGridStaticCover(name: string, appid: string, url: string, author: string) {
+  return new Promise<boolean>(resolve => {
     request(url, (err, res, image) => {
       if (!(res.statusCode === 404)) {
         fs.writeFileSync(gridDir + appid + 'p.png', image);
@@ -194,13 +144,8 @@ function getSteamGridStaticCover(name, appid, url, author) {
   });
 }
 
-/**
- * @param {string} name
- * @param {string} appid
- * @return {Promise<Boolean>}
- */
-function getCoverFromKennettNyGitHub(name, appid) {
-  return new Promise(resolve => {
+function getCoverFromKennettNyGitHub(name: string, appid: string) {
+  return new Promise<boolean>(resolve => {
     request(
       `https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/kennett-ny/${appid}p.png`,
       (err, res, image) => {
@@ -214,13 +159,8 @@ function getCoverFromKennettNyGitHub(name, appid) {
   });
 }
 
-/**
- * @param {string} name
- * @param {string} appid
- * @return {Promise<Boolean>}
- */
-function getCoverFromCamporterGitHub(name, appid) {
-  return new Promise(resolve => {
+function getCoverFromCamporterGitHub(name: string, appid: string) {
+  return new Promise<boolean>(resolve => {
     request(
       `https://raw.githubusercontent.com/babgozd/camporter96-custom/master/grid/${appid}p.png`,
       (err, res, image) => {
@@ -234,10 +174,6 @@ function getCoverFromCamporterGitHub(name, appid) {
   });
 }
 
-/**
- * @param {number} time
- * @return {Promise<void>} 
- */
-function sleep(time) {
-  return new Promise(resolve => setTimeout(resolve, time))
+function sleep(time: number) {
+  return new Promise<void>(resolve => setTimeout(resolve, time))
 }
