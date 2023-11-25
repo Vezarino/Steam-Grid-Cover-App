@@ -3,7 +3,7 @@ declare const request: typeof import('request');
 
 async function screenshotResponse(id: number) {
   let response = await fetch('https://store.steampowered.com/api/appdetails?appids=' + id);
-  let data = await response.json();
+  let data = await response.json() as SteamAppDetailsResponse;
 
   if (data && data[id].data) return data[id].data.screenshots[2].path_full;
 }
