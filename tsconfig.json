@@ -4,7 +4,7 @@
     "module": "commonjs",
     "noImplicitAny": true,
     "sourceMap": true,
-    "outDir": "dist/js",
+    "outDir": "js",
     "baseUrl": ".",
     "moduleResolution": "Node10",
     "strict": true,
