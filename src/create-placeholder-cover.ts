@@ -5,7 +5,7 @@ async function screenshotResponse(id: number) {
   let response = await fetch('https://store.steampowered.com/api/appdetails?appids=' + id);
   let data = await response.json() as SteamAppDetailsResponse;
 
-  if (data && data[id].data) return data[id].data.screenshots[2].path_full;
+  return data[id].success ? data[id].data.screenshots[2].path_full : null;
 }
 
 function createPlaceholderCover(app: SteamGame, gridDir: string) {
@@ -13,24 +13,24 @@ function createPlaceholderCover(app: SteamGame, gridDir: string) {
     //logProgressError('Creating Placeholder Cover: ', app.name);
     const link = await screenshotResponse(app.appid) || 'https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/yRF5c-O/abstract-motion-background-blue-cyan-purple-4k-and-full-hd_nyw56exgg__F0000.png';
     request(link, async (err: unknown, res: unknown, image: unknown) => {
-      if (err) logProgressError('Unable to get Cover: ' + app.name);
-      else {
+      if (err) {
+        logProgressError(`Unable to get Cover: ${app.name} (${err})`);
+        resolve(false);
+      } else {
         const gm = await import('gm');
         writeFileSync(gridDir + app.appid + 'p.png', image);
         gm(gridDir + app.appid + 'p.png').identify((err, data) => {
           if (err) {
-            logProgressError('Unable to find GraphicsMagick install to create a cover for ' + app.name);
+            logProgressError(`Unable to find GraphicsMagick install to create a cover for ${app.name} (${err})`);
             logProgressError('Make sure to install it from the link above.');
-            console.log(err);
           } else {
-            var titleName = app.name;
-            var lineLength = 0;
-            var lineCount = 1;
+            let titleName = app.name;
+            let lineLength = 0;
+            let lineCount = 1;
             for (let i = 0; i < app.name.length; i++) {
               if (lineLength >= 8) {
-                titleName =
-                  titleName.substring(0, i - 12) + titleName.substring(i - 12).replace(' ', '\n');
-                lineLength = lineLength - 8;
+                titleName = titleName.substring(0, i - 12) + titleName.substring(i - 12).replace(' ', '\n');
+                lineLength -= 8;
                 lineCount++;
               }
               lineLength++;
@@ -46,23 +46,20 @@ function createPlaceholderCover(app: SteamGame, gridDir: string) {
               .region(150, 40 * Math.sqrt(lineCount), 5, 10)
               .gravity('Center')
               .font(gridDir + 'cover-font.ttf', 12)
-              .fontSize(
-                90 / app.name.replace(' ', '').replace('i', '').length > 10
-                  ? 90 / app.name.replace(' ', '').replace('i', '').length
-                  : 10
-              )
+              .fontSize(Math.max(10, 90 / app.name.replace(' ', '').replace('i', '').length))
               .fill('white')
               .drawText(0, 0, titleName)
               .write(gridDir + app.appid + 'p.png', err => {
-                if (err) logProgressError(err.message);
+                if (err) {
+                  logProgressError(err.message);
+                  resolve(false);
+                } else {
+                  logProgress('Created new cover for: ' + app.name);
+                  resolve(true);
+                }
               });
           }
-          if (err) {
-            logProgressError('Error writing to the grid folder');
-          }
         });
-        logProgress('Created new cover for: ' + app.name);
-        resolve(!!err);
       }
     })
   });
