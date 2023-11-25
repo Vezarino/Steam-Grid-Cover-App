@@ -18,7 +18,7 @@ function writeCovers() {
   if (downloadFont()) return;
   if (setInputs()) return;
   fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAMAPIKEY}'&steamid=${STEAMID}'&include_appinfo=true&include_played_free_games=true`)
-    .then(response => response.json())
+    .then(response => response.json() as Promise<SteamGetOwnedGamesResult>)
     .then(async data => {
       logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
       progress.max = data.response.games.length;
@@ -26,15 +26,12 @@ function writeCovers() {
         try {
           await sleep(delay);
           await fetch(`https://www.steamgriddb.com/api/v2/grids/steam/${app.appid}?styles=white_logo&dimensions=600x900,342x482`, { headers: steamGridAPI })
-            .then(grids => grids.json())
+            .then(grids => grids.json() as Promise<SGDBGridsResponse>)
             .then(grids => grids.data)
             .then(async grids => {
               if (grids === undefined) logProgressError("It appears that Steamgriddb API is down, so cover can't be fetched. Try running the app again later");
               else if (grids.length === 0 || coverMode === 'animated') {
-                await getSteamGridAnimatedCover(app.name, app.appid)
-                  || await getCoverFromKennettNyGitHub(app.name, app.appid)
-                  || await getCoverFromCamporterGitHub(app.name, app.appid)
-                  || createPlaceholderCover(app, gridDir);
+                await getSteamGridAnimatedCover(app.name, app.appid) || createPlaceholderCover(app, gridDir);
               } else if (!(await getSteamGridStaticCover(app.name, app.appid, grids[0].url, grids[0].author.name))) {
                 logProgressError('Error downloading cover from steamgriddb ' + app.name);
               }
@@ -117,7 +114,7 @@ function downloadFont() {
   return error;
 }
 
-function getSteamGridAnimatedCover(name: string, appid: string) {
+function getSteamGridAnimatedCover(name: string, appid: number) {
   return new Promise<boolean>(resolve => {
     request(
       `https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/${appid}p.png`,
@@ -132,7 +129,7 @@ function getSteamGridAnimatedCover(name: string, appid: string) {
   });
 }
 
-function getSteamGridStaticCover(name: string, appid: string, url: string, author: string) {
+function getSteamGridStaticCover(name: string, appid: number, url: string, author: string) {
   return new Promise<boolean>(resolve => {
     request(url, (err, res, image) => {
       if (!(res.statusCode === 404)) {
@@ -141,36 +138,6 @@ function getSteamGridStaticCover(name: string, appid: string, url: string, autho
         resolve(true);
       } else resolve(false);
     });
-  });
-}
-
-function getCoverFromKennettNyGitHub(name: string, appid: string) {
-  return new Promise<boolean>(resolve => {
-    request(
-      `https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/kennett-ny/${appid}p.png`,
-      (err, res, image) => {
-        if (!(res.statusCode === 404)) {
-          fs.writeFileSync(gridDir + appid + 'p.png', image);
-          logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/kennett-ny`);
-          resolve(true);
-        } else resolve(false);
-      }
-    );
-  });
-}
-
-function getCoverFromCamporterGitHub(name: string, appid: string) {
-  return new Promise<boolean>(resolve => {
-    request(
-      `https://raw.githubusercontent.com/babgozd/camporter96-custom/master/grid/${appid}p.png`,
-      (err, res, image) => {
-        if (!(res.statusCode === 404)) {
-          fs.writeFileSync(gridDir + appid + 'p.png', image);
-          logProgress(`Found Cover ${name}. Credit to u/camporter`);
-          resolve(true);
-        } else resolve(false);
-      }
-    );
   });
 }
 

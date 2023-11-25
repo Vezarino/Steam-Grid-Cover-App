@@ -8,7 +8,7 @@ async function screenshotResponse(id: number) {
   if (data && data[id].data) return data[id].data.screenshots[2].path_full;
 }
 
-function createPlaceholderCover(app: unknown, gridDir: string) {
+function createPlaceholderCover(app: SteamGame, gridDir: string) {
   return new Promise<boolean>(async resolve => {
     //logProgressError('Creating Placeholder Cover: ', app.name);
     const link = await screenshotResponse(app.appid) || 'https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/yRF5c-O/abstract-motion-background-blue-cyan-purple-4k-and-full-hd_nyw56exgg__F0000.png';
@@ -54,7 +54,7 @@ function createPlaceholderCover(app: unknown, gridDir: string) {
               .fill('white')
               .drawText(0, 0, titleName)
               .write(gridDir + app.appid + 'p.png', err => {
-                if (err) logProgressError(err);
+                if (err) logProgressError(err.message);
               });
           }
           if (err) {
