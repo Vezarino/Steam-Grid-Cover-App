@@ -13,7 +13,6 @@ let delay = 500;
 let progress: HTMLMeterElement;
 
 function writeCovers() {
-  if (downloadFont()) return;
   if (setInputs()) return;
   fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAMAPIKEY}'&steamid=${STEAMID}'&include_appinfo=true&include_played_free_games=true`)
     .then(response => response.json() as Promise<SteamGetOwnedGamesResult>)
@@ -92,23 +91,6 @@ function setInputs() {
   delay = (document.getElementById('delay') as HTMLInputElement).valueAsNumber;
   progress = document.getElementById('progress-bar') as HTMLMeterElement;
   if (!error) (document.getElementById('start-button') as HTMLButtonElement).disabled = true;
-  return error;
-}
-
-function downloadFont() {
-  var error = false;
-  request(
-    'https://github.com/T1lt3d/Steam-Grid-Cover-App/blob/master/assets/cover-font.ttf?raw=true',
-    (err, res, font) => {
-      if (err) {
-        logProgressError('Failed to download font for covers');
-        error = true;
-      } else {
-        logProgress('Downloaded font successfully');
-        fs.writeFileSync(gridDir + 'cover-font.ttf', font);
-      }
-    }
-  );
   return error;
 }
 

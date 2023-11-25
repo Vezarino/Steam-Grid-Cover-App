@@ -7,7 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "build-options": "electron-builder",
-    "prepack": "node-gyp rebuild",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "build": "electron-builder --win",
@@ -22,10 +21,10 @@
     "electron": "^27.1.0",
     "electron-builder": "^24.0.0",
     "electron-packager": "^17.1.1",
-    "gm": "^1.25.0",
     "node-gyp": "^10.0.1"
   },
   "dependencies": {
+    "gm": "^1.25.0",
     "path": "^0.12.7",
     "request": "^2.88.0"
   }

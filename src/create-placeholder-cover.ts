@@ -1,4 +1,6 @@
-import { writeFileSync } from 'fs';
+import { stat, copyFile } from 'fs/promises';
+import { join } from 'path';
+import * as gm from 'gm';
 declare const request: typeof import('request');
 
 async function screenshotResponse(id: number) {
@@ -8,8 +10,11 @@ async function screenshotResponse(id: number) {
   return data[id].success ? data[id].data.screenshots[2].path_full : null;
 }
 
+const fontPacked = join(__dirname, "assets", "cover-font.ttf");
 function createPlaceholderCover(app: SteamGame, gridDir: string) {
   return new Promise<boolean>(async resolve => {
+    const font = gridDir + 'cover-font.ttf';
+    if (!await stat(gridDir + 'cover-font.ttf').then(x => x.isFile()).catch(() => false)) await copyFile(fontPacked, font);
     //logProgressError('Creating Placeholder Cover: ', app.name);
     const link = await screenshotResponse(app.appid) || 'https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/yRF5c-O/abstract-motion-background-blue-cyan-purple-4k-and-full-hd_nyw56exgg__F0000.png';
     request(link, async (err: unknown, res: unknown, image: unknown) => {
@@ -17,11 +22,10 @@ function createPlaceholderCover(app: SteamGame, gridDir: string) {
         logProgressError(`Unable to get Cover: ${app.name} (${err})`);
         resolve(false);
       } else {
-        const gm = await import('gm');
-        writeFileSync(gridDir + app.appid + 'p.png', image);
-        gm(gridDir + app.appid + 'p.png').identify((err, data) => {
+        // const gm = await import('gm');
+        const gmi = gm(image).identify((err, data) => {
           if (err) {
-            logProgressError(`Unable to find GraphicsMagick install to create a cover for ${app.name} (${err})`);
+            logProgressError(`Unable to find GraphicsMagick install to create a cover for ${app.name} (${err.message})`);
             logProgressError('Make sure to install it from the link above.');
           } else {
             let titleName = app.name;
@@ -35,21 +39,22 @@ function createPlaceholderCover(app: SteamGame, gridDir: string) {
               }
               lineLength++;
             }
-            gm(gridDir + app.appid + 'p.png')
+            gmi
               .crop((data.size.height / 9) * 6, data.size.height, data.size.width / 2 - 80, 0)
               .resize(160, 240)
+              .repage('+')
               .contrast(-2)
               .filter('Blackman')
               .modulate(80, 80)
               .stroke('rgba(255,255,255,0.5)', 1)
               .stroke('none')
-              .region(150, 40 * Math.sqrt(lineCount), 5, 10)
+              .region(150, Math.floor(40 * Math.sqrt(lineCount)), 5, 10)
               .gravity('Center')
-              .font(gridDir + 'cover-font.ttf', 12)
-              .fontSize(Math.max(10, 90 / app.name.replace(' ', '').replace('i', '').length))
+              .font(font)
+              .fontSize(Math.max(10, Math.ceil(90 / app.name.replace(' ', '').replace('i', '').length)))
               .fill('white')
               .drawText(0, 0, titleName)
-              .write(gridDir + app.appid + 'p.png', err => {
+              .write(gridDir + app.appid + 'p.' + data.format, err => { // Attempting to write as .png results in a cut off image when input is .jpeg
                 if (err) {
                   logProgressError(err.message);
                   resolve(false);
