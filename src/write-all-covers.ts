@@ -12,8 +12,6 @@ let coverMode: string;
 let delay = 500;
 let progress: HTMLMeterElement;
 
-fetch('https://www.steamgriddb.com/api/v2/grids/steam/400?styles=white_logo&dimensions=600x900&342x482', { headers: steamGridAPI }).then(res => console.log(res.json()));
-
 function writeCovers() {
   if (downloadFont()) return;
   if (setInputs()) return;
