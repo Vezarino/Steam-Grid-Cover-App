@@ -15,14 +15,12 @@ function createPlaceholderCover(app: SteamGame, gridDir: string) {
   return new Promise<boolean>(async resolve => {
     const font = gridDir + 'cover-font.ttf';
     if (!await stat(gridDir + 'cover-font.ttf').then(x => x.isFile()).catch(() => false)) await copyFile(fontPacked, font);
-    //logProgressError('Creating Placeholder Cover: ', app.name);
     const link = await screenshotResponse(app.appid) || 'https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/yRF5c-O/abstract-motion-background-blue-cyan-purple-4k-and-full-hd_nyw56exgg__F0000.png';
     request(link, async (err: unknown, res: unknown, image: unknown) => {
       if (err) {
         logProgressError(`Unable to get Cover: ${app.name} (${err})`);
         resolve(false);
       } else {
-        // const gm = await import('gm');
         const gmi = gm(image).identify((err, data) => {
           if (err) {
             logProgressError(`Unable to find GraphicsMagick install to create a cover for ${app.name} (${err.message})`);

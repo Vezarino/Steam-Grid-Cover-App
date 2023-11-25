@@ -14,25 +14,23 @@ let progress: HTMLMeterElement;
 
 function writeCovers() {
   if (setInputs()) return;
-  fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAMAPIKEY}'&steamid=${STEAMID}'&include_appinfo=true&include_played_free_games=true`)
+  fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAMAPIKEY}&steamid=${STEAMID}&include_appinfo=true&include_played_free_games=true`)
     .then(response => response.json() as Promise<SteamGetOwnedGamesResult>)
     .then(async data => {
       logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
       progress.max = data.response.games.length;
+      const isAnimated = coverMode === 'animated';
       for (const app of data.response.games.slice(0, 10)) {
         try {
           await sleep(delay);
-          await fetch(`https://www.steamgriddb.com/api/v2/grids/steam/${app.appid}?styles=white_logo&dimensions=600x900,342x482`, { headers: steamGridAPI })
-            .then(grids => grids.json() as Promise<SGDBGridsResponse>)
-            .then(grids => grids.data)
-            .then(async grids => {
-              if (grids === undefined) logProgressError("It appears that Steamgriddb API is down, so cover can't be fetched. Try running the app again later");
-              else if (grids.length === 0 || coverMode === 'animated') {
-                await getSteamGridAnimatedCover(app.name, app.appid) || createPlaceholderCover(app, gridDir);
-              } else if (!(await getSteamGridStaticCover(app.name, app.appid, grids[0].url, grids[0].author.name))) {
-                logProgressError('Error downloading cover from steamgriddb ' + app.name);
-              }
-            });
+          const grids = await listSteamGridCoversForSteamApp(app.appid, isAnimated);
+          // Fall back from animated to static, but not the other way around
+          const grid = grids[0] ?? (isAnimated ? (await listSteamGridCoversForSteamApp(app.appid, false))?.[0] : undefined);
+          const result = grid && await getSteamGridCover(app.name, app.appid, grid.url, grid.author.name);
+          if (!result) {
+            logProgressError(`Error downloading cover from steamgriddb ${app.name}, creating placeholder`);
+            createPlaceholderCover(app, gridDir);
+          }
         } finally {
           ++progress.value
         }
@@ -49,7 +47,6 @@ function writeCovers() {
 }
 
 function setInputs() {
-  console.log(gridDir);
   const gridDirInput = path.join((document.getElementById('grid-dir') as HTMLInputElement).value.replace(/\\/g, '\\'), 'config', 'grid', '/');
   const STEAMIDInput = (document.getElementById('steam-ID') as HTMLInputElement).value.trim();
   const STEAMAPIInput = (document.getElementById('steam-APIKEY') as HTMLInputElement).value.trim();
@@ -71,7 +68,7 @@ function setInputs() {
   }
   if (!fs.existsSync(gridDir)) {
     // Check if user directory exists, but doesn't contain the 'grid' directory
-    var parent = gridDir.slice(0, -5);
+    const parent = gridDir.slice(0, -5);
     if (fs.existsSync(parent)) {
       try {
         fs.mkdirSync(gridDir);
@@ -94,22 +91,14 @@ function setInputs() {
   return error;
 }
 
-function getSteamGridAnimatedCover(name: string, appid: number) {
-  return new Promise<boolean>(resolve => {
-    request(
-      `https://github.com/T1lt3d/Steam-Grid-Cover-App/raw/master/cover-images/animated/${appid}p.png`,
-      (err, res, image) => {
-        if (!(res.statusCode === 404)) {
-          fs.writeFileSync(gridDir + appid + 'p.png', image);
-          logProgress(`Found Cover ${name} Credit to r/steamgrid community and u/Deytron for compilation`);
-          resolve(true);
-        } else resolve(false);
-      }
-    );
-  });
+async function listSteamGridCoversForSteamApp(id: number, animated: boolean) {
+  const url = `https://www.steamgriddb.com/api/v2/grids/steam/${id}?styles=white_logo&dimensions=600x900,342x482`;
+  return fetch(animated ? url + '&types=animated' : url, { headers: steamGridAPI })
+    .then(grids => grids.json() as Promise<SGDBGridsResponse>)
+    .then(grids => grids.data)
 }
 
-function getSteamGridStaticCover(name: string, appid: number, url: string, author: string) {
+function getSteamGridCover(name: string, appid: number, url: string, author: string) {
   return new Promise<boolean>(resolve => {
     request(url, (err, res, image) => {
       if (!(res.statusCode === 404)) {
