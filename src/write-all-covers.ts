@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as _request from 'request';
 
-const request = _request.defaults({ encoding: null });
 const steamGridAPI = { Authorization: `Bearer ${process.env.GRIDAPI || ''}` };
 
 let gridDir: string;
@@ -12,38 +10,45 @@ let coverMode: string;
 let delay = 500;
 let progress: HTMLMeterElement;
 
-function writeCovers() {
+async function writeCovers() {
   if (setInputs()) return;
-  fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAMAPIKEY}&steamid=${STEAMID}&include_appinfo=true&include_played_free_games=true`)
-    .then(response => response.json() as Promise<SteamGetOwnedGamesResult>)
-    .then(async data => {
-      logProgress('Found ' + data.response.games.length + ' Games on this Steam Account.');
-      progress.max = data.response.games.length;
-      const isAnimated = coverMode === 'animated';
-      for (const app of data.response.games.slice(0, 10)) {
-        try {
-          await sleep(delay);
-          const grids = await listSteamGridCoversForSteamApp(app.appid, isAnimated);
-          // Fall back from animated to static, but not the other way around
-          const grid = grids[0] ?? (isAnimated ? (await listSteamGridCoversForSteamApp(app.appid, false))?.[0] : undefined);
-          const result = grid && await getSteamGridCover(app.name, app.appid, grid.url, grid.author.name);
-          if (!result) {
-            logProgressError(`Error downloading cover from steamgriddb ${app.name}, creating placeholder`);
-            createPlaceholderCover(app, gridDir);
-          }
-        } finally {
-          ++progress.value
+  try {
+    const response = await getSteamOwnedGames();
+
+    logProgress('Found ' + response.games.length + ' Games on this Steam Account.');
+    progress.max = response.games.length;
+    const isAnimated = coverMode === 'animated';
+    for (const app of response.games) {
+      try {
+        await sleep(delay);
+        const grids = await listSteamGridCoversForSteamApp(app.appid, isAnimated);
+        // Fall back from animated to static, but not the other way around
+        const grid = grids[0] ?? (isAnimated ? (await listSteamGridCoversForSteamApp(app.appid, false))?.[0] : undefined);
+        const result = grid && await getSteamGridCover(app.name, app.appid, grid.url, grid.author.name);
+        if (!result) {
+          logProgressError(`Error downloading cover from steamgriddb ${app.name}, creating placeholder`);
+          await createPlaceholderCover(app, gridDir);
         }
+      } catch (err) {
+        logProgressError(`Failed to download cover for ${app.name}: ${err}`);
+      } finally {
+        ++progress.value;
       }
-      logProgress('Finished processing');
-      (document.getElementById('start-button') as HTMLButtonElement).disabled = false;
-    })
-    .catch(err => {
-      logProgressError('Error accessing the Steam API');
-      logProgressError('Make sure the API Key and SteamID64 are correct!');
-      logProgressError('HTTP Error: ' + err);
-      (document.getElementById('start-button') as HTMLButtonElement).disabled = false;
-    });
+    }
+    logProgress('Finished processing');
+  } catch (err) {
+    logProgressError('Error accessing the Steam API');
+    logProgressError('Make sure the API Key and SteamID64 are correct!');
+    logProgressError('HTTP Error: ' + err);
+  } finally {
+    (document.getElementById('start-button') as HTMLButtonElement).disabled = false;
+  }
+}
+
+function getSteamOwnedGames() {
+  return fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${STEAMAPIKEY}&steamid=${STEAMID}&include_appinfo=true&include_played_free_games=true`)
+    .then(response => response.json() as Promise<SteamGetOwnedGamesResult>)
+    .then(data => data.response)
 }
 
 function setInputs() {
@@ -98,16 +103,16 @@ async function listSteamGridCoversForSteamApp(id: number, animated: boolean) {
     .then(grids => grids.data)
 }
 
-function getSteamGridCover(name: string, appid: number, url: string, author: string) {
-  return new Promise<boolean>(resolve => {
-    request(url, (err, res, image) => {
-      if (!(res.statusCode === 404)) {
-        fs.writeFileSync(gridDir + appid + 'p.png', image);
-        logProgress(`Found Cover ${name}  from steamgriddb. Credit to ${author}`);
-        resolve(true);
-      } else resolve(false);
-    });
-  });
+async function getSteamGridCover(name: string, appid: number, url: string, author: string) {
+  const request = await fetch(url);
+  if (request.status !== 404 && request.body) {
+    // Using streams fails with a type error
+    fs.writeFileSync(gridDir + appid + 'p.png', Buffer.from(await request.arrayBuffer()));
+    logProgress(`Found Cover ${name}  from steamgriddb. Credit to ${author}`);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function sleep(time: number) {
